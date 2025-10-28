@@ -67,6 +67,18 @@ Replica shards → copies for fault tolerance & load balancing. <br>
 Example: <br>
 If you have an index with 3 primary shards and 1 replica → total = 6 shards.
 
+
+### 🧰 Changing Shards Over Time
+
+- Shards are defined when an index is created.
+- But what if your data grows or shrinks?
+
+#### 🧩 Options:
+
+- Index rollover → create a new index periodically (e.g., daily logs).
+- Reindex → create a new index with different shard settings.
+- Index lifecycle management (ILM) → automate rollover and deletion.
+
 <br>
 
 ## Replica
