@@ -661,3 +661,80 @@ Replication Steps: <br>
 | **Translog**          | Durable write log for recovery               | `/data/nodes/0/translog` |
 
 </details>
+
+<summary>Optimistic concurrency control</summary>
+<details>
+  # ⚙️ Optimistic Concurrency Control in Elasticsearch
+
+When multiple threads, processes, or users try to update the **same document** simultaneously, we face a common issue:  
+**race conditions** — where one update overwrites another unintentionally.
+
+To handle this, Elasticsearch uses **Optimistic Concurrency Control (OCC)**.
+
+---
+
+## 🧩 1. The Problem: Concurrent Updates
+
+Imagine you have a document:
+
+```json
+{
+  "_id": "1",
+  "_source": {
+    "name": "iPhone 16",
+    "price": 1299
+  }
+}
+```
+
+Now two clients read the document at nearly the same time: <br>
+- Client A reads → wants to update price to 1399.
+- Client B reads → wants to update price to 1349.
+
+| Client | Action | Value | Timing              |
+| ------ | ------ | ----- | ------------------- |
+| A      | Update | 1399  | t1                  |
+| B      | Update | 1349  | t2 (slightly later) |
+
+### Traditional Approach: _version Field (Old System)
+Before Elasticsearch 6, OCC was handled using a _version number for each document. <br>
+
+Every document automatically had a version starting from 1. <br>
+You could include a version in your update request: <br>
+
+```
+PUT /products/_doc/1?version=3
+{
+  "price": 1399
+}
+```
+
+Elasticsearch would check if the current version == 3. <br>
+If true → apply update and increment version to 4. <br>
+If false → reject with 409 Conflict. <br>
+
+
+### 🔑 Modern OCC: if_seq_no and if_primary_term
+
+| Field               | Purpose                                                      |
+| ------------------- | ------------------------------------------------------------ |
+| **`_seq_no`**       | Sequence number of the last operation on the document.       |
+| **`_primary_term`** | Term (epoch) of the current primary shard that processed it. |
+
+```
+PUT /products/_doc/1?if_seq_no=17&if_primary_term=3
+{
+  "price": 1399
+}
+
+```
+
+| Concept           | Purpose                                      | Example               |
+| ----------------- | -------------------------------------------- | --------------------- |
+| `_seq_no`         | Tracks per-document operation order          | `17`                  |
+| `_primary_term`   | Tracks which primary shard applied the write | `3`                   |
+| `if_seq_no`       | Ensures no stale write                       | Match expected seq_no |
+| `if_primary_term` | Ensures the primary hasn’t changed           | Match expected term   |
+| `409 Conflict`    | Returned if mismatch occurs                  | Conflict detected     |
+
+</details>
