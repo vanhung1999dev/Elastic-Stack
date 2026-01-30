@@ -519,5 +519,85 @@ A field is considered missing when: <br>
 - It is not present in the document
 - Its value is null
 - It is an empty array ([])
-- 
+
+If created_at is not included: <br>
+- No value is indexed
+- No storage is used for that field
+
+Elasticsearch does not store nulls by default. <br>
+
+## Querying for Missing Fields
+
+### Find Documents Where a Field Exists
+
+```
+{
+  "query": {
+    "exists": {
+      "field": "created_at"
+    }
+  }
+}
+```
+
+### Find Documents Where a Field Is Missing
+
+```
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "exists": {
+          "field": "created_at"
+        }
+      }
+    }
+  }
+}
+```
+
+### Missing Fields in Date Range Queries
+
+If a document does not have the date field, it is excluded from range queries automatically. <br>
+
+```
+{
+  "range": {
+    "created_at": {
+      "gte": "2024-01-01"
+    }
+  }
+}
+```
+
+## Using null_value in Mapping
+You can replace null with a default value at index time: <br>
+
+```
+{
+  "type": "date",
+  "null_value": "1970-01-01"
+}
+```
+
+This converts null into a real indexed date. <br>
+⚠️ This does not apply to missing fields—only explicit null values. <br>
+
+## Summary
+
+### Dates
+- Stored internally as epoch milliseconds
+- Always handled in UTC
+- Flexible input formats
+- Support date math and time zones
+
+### Missing Fields
+- Not indexed or stored
+- Excluded from queries and aggregations by default
+- Can be handled explicitly in:
+    - exists queries
+    - sorting (missing)
+    - aggregations (missing)
+    - mappings (null_value)
+
 </details>
