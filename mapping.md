@@ -447,5 +447,77 @@ Elastic search will understand you want to search in nested object. <br>
 
 <summary>How Date work</summary>
 <details>
-  
+  # Dates and Missing Fields in Elasticsearch
+
+This document explains how Elasticsearch handles **date fields** and how it behaves when **fields are missing** in documents, queries, sorting, and aggregations.
+
+---
+
+## 1. Date Fields in Elasticsearch
+
+### 1.1 What Is a Date Field?
+
+In Elasticsearch, a `date` field represents a point in time. Internally, Elasticsearch **stores dates as milliseconds since the Unix epoch (1970-01-01T00:00:00Z)**.
+
+Even if you index a date as a string, Elasticsearch converts it to a long value internally.
+
+---
+
+### 1.2 Date Mapping
+
+A date field must be mapped as type `date`.
+
+Example mapping:
+
+```json
+{
+  "mappings": {
+    "properties": {
+      "created_at": {
+        "type": "date"
+      }
+    }
+  }
+}
+```
+
+## Supported Date Formats
+By default, Elasticsearch supports: <br>
+
+```
+strict_date_optional_time||epoch_millis
+```
+This means the following values are valid: <br>
+
+```
+2024-01-15
+2024-01-15T10:30:00
+2024-01-15T10:30:00Z
+1705314600000
+```
+
+## Time Zones
+
+Dates are stored in `UTC` internally. <br>
+
+You can specify a time zone in queries: <br>
+
+```
+{
+  "range": {
+    "created_at": {
+      "gte": "2024-01-01",
+      "lte": "2024-01-31",
+      "time_zone": "+02:00"
+    }
+  }
+}
+```
+
+## Missing Fields in Elasticsearch
+A field is considered missing when: <br>
+- It is not present in the document
+- Its value is null
+- It is an empty array ([])
+- 
 </details>
