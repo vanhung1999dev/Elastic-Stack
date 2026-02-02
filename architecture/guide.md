@@ -88,6 +88,23 @@ If you have an index with 3 primary shards and 1 replica → total = 6 shards.
 
 <br>
 
+### 🔁 How everything fits together (flow)
+```
+Index
+ └── Shards
+      └── Documents
+           ├── _source (stored JSON)
+           └── Field indexes
+                ├── text index
+                ├── keyword index
+                └── numeric index
+```
+#### 🔍 How search really works
+- Query hits field indexes in shards
+- Matching document IDs are found
+- Results are merged across shards
+- _source is fetched for matched docs
+
 ## Segment (Lucene Level)
 - Inside each shard, data is stored in Lucene segments (immutable files).
 - When new data is indexed:
